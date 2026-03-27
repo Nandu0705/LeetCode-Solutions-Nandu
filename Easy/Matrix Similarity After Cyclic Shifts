@@ -1,0 +1,20 @@
+class Solution {
+public:
+    bool areSimilar(vector<vector<int>>& mat, int k) {
+        int n = mat[0].size();
+        k %= n; // Optimization: shifting n times is the same as 0
+        
+        if (k == 0) return true;
+
+        for (int i = 0; i < mat.size(); i++) {
+            for (int j = 0; j < n; j++) {
+                // For a cyclic shift to result in the same matrix,
+                // the element at j must match the element at (j + k) % n
+                if (mat[i][j] != mat[i][(j + k) % n]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+};
