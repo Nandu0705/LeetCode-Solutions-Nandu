@@ -1,0 +1,83 @@
+class Solution {
+public:
+    int maxWalls(vector<int>& robots, vector<int>& distance, vector<int>& walls) {
+        int n = robots.size();
+        vector<pair<int,int>> bots(n);
+        for (int i = 0; i < n; i++) bots[i] = {robots[i], distance[i]};
+        sort(bots.begin(), bots.end());
+
+        vector<int> sw = walls;
+        sort(sw.begin(), sw.end());
+
+        // Count walls in [l, r] inclusive
+        auto countWalls = [&](long long l, long long r) -> int {
+            if (l > r) return 0;
+            int lo = (int)(lower_bound(sw.begin(), sw.end(), (int)l) - sw.begin());
+            int hi = (int)(upper_bound(sw.begin(), sw.end(), (int)r) - sw.begin());
+            return hi - lo;
+        };
+
+        // For robot i: 
+        //   left range:  [max(bots[i-1].first+1, pos-dist), pos]
+        //   right range: [pos, min(bots[i+1].first-1, pos+dist)]
+        // Overlap between robot i firing right and robot i+1 firing left:
+        //   robot i right end = min(bots[i+1].first-1, pos_i + dist_i)
+        //   robot i+1 left start = max(bots[i].first+1, pos_{i+1} - dist_{i+1})
+        //   overlap = [robot_{i+1} left start, robot_i right end]  if that's valid
+
+        // dp[0] = robot i fires left, dp[1] = robot i fires right
+        // Transition: when robot i+1 fires left, if robot i fired right,
+        //   subtract walls already covered in the overlap region
+
+        const int NEG_INF = INT_MIN / 2;
+        // dp[dir]: max walls with robot i choosing dir (0=left,1=right)
+        vector<int> dp(2, 0);
+
+        auto getLeftRange = [&](int i) -> pair<long long, long long> {
+            int pos = bots[i].first, dist = bots[i].second;
+            long long lb = (i > 0) ? (long long)bots[i-1].first + 1 : (long long)INT_MIN;
+            return {max(lb, (long long)pos - dist), (long long)pos};
+        };
+        auto getRightRange = [&](int i) -> pair<long long, long long> {
+            int pos = bots[i].first, dist = bots[i].second;
+            long long rb = (i < n-1) ? (long long)bots[i+1].first - 1 : (long long)INT_MAX;
+            return {(long long)pos, min(rb, (long long)pos + dist)};
+        };
+
+        auto [l0, r0] = getLeftRange(0);
+        auto [l1, r1] = getRightRange(0);
+        dp[0] = countWalls(l0, r0);  // robot 0 fires left
+        dp[1] = countWalls(l1, r1);  // robot 0 fires right
+
+        for (int i = 1; i < n; i++) {
+            auto [ll, lr] = getLeftRange(i);
+            auto [rl, rr] = getRightRange(i);
+
+            int wallsLeft  = countWalls(ll, lr);
+            int wallsRight = countWalls(rl, rr);
+
+            // If robot i fires left, overlap with robot i-1 firing right:
+            // robot i-1's right range end vs robot i's left range
+            auto [pl, pr] = getRightRange(i-1);
+            // overlap region: [ll, min(pr, lr)] — both cover this
+            int overlapIfPrevRight = countWalls(ll, min(pr, lr));
+
+            vector<int> ndp(2, NEG_INF);
+            // robot i fires left
+            if (dp[0] != NEG_INF)
+                ndp[0] = max(ndp[0], dp[0] + wallsLeft);           // prev fired left, no overlap
+            if (dp[1] != NEG_INF)
+                ndp[0] = max(ndp[0], dp[1] + wallsLeft - overlapIfPrevRight); // prev fired right, subtract overlap
+
+            // robot i fires right
+            if (dp[0] != NEG_INF)
+                ndp[1] = max(ndp[1], dp[0] + wallsRight);
+            if (dp[1] != NEG_INF)
+                ndp[1] = max(ndp[1], dp[1] + wallsRight);
+
+            dp = ndp;
+        }
+
+        return max(dp[0], dp[1]);
+    }
+};
