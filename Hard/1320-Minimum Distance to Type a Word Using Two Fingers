@@ -1,0 +1,53 @@
+class Solution {
+public:
+    // Get (row, col) of a letter
+    pair<int,int> getPos(int c) {
+        return {c / 6, c % 6};
+    }
+    
+    // Manhattan distance between two letters
+    int dist(int a, int b) {
+        if (a == 26) return 0; // unplaced finger = free placement
+        auto [r1, c1] = getPos(a);
+        auto [r2, c2] = getPos(b);
+        return abs(r1 - r2) + abs(c1 - c2);
+    }
+    
+    int minimumDistance(string word) {
+        int n = word.size();
+        
+        // dp[other] = min cost so far, where one finger is at word[i-1]
+        //             and the other finger is at 'other' (26 = not placed)
+        // 27 states: 0-25 for each letter, 26 for unplaced
+        vector<int> dp(27, INT_MAX);
+        dp[26] = 0; // Initially: no finger placed, cost = 0
+        
+        for (int i = 0; i < n - 1; i++) {
+            int cur  = word[i]     - 'A'; // just typed
+            int next = word[i + 1] - 'A'; // about to type
+            
+            vector<int> ndp(27, INT_MAX);
+            
+            for (int other = 0; other <= 26; other++) {
+                if (dp[other] == INT_MAX) continue;
+                
+                int cost = dp[other];
+                
+                // Option 1: Move the finger at 'cur' to 'next'
+                // Other finger stays at 'other'
+                int opt1 = cost + dist(cur, next);
+                ndp[other] = min(ndp[other], opt1);
+                
+                // Option 2: Move the finger at 'other' to 'next'
+                // The finger that was at 'cur' becomes the new 'other'
+                int opt2 = cost + dist(other, next);
+                ndp[cur] = min(ndp[cur], opt2);
+            }
+            
+            dp = ndp;
+        }
+        
+        // Answer is the minimum across all possible 'other' finger positions
+        return *min_element(dp.begin(), dp.end());
+    }
+};
