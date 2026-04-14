@@ -1,0 +1,46 @@
+class Solution {
+public:
+    long long minimumTotalDistance(vector<int>& robot, vector<vector<int>>& factory) {
+        sort(robot.begin(), robot.end());
+        sort(factory.begin(), factory.end());
+        
+        // Expand factories based on their limits
+        vector<int> fpos;
+        for (auto& f : factory) {
+            for (int i = 0; i < f[1]; i++) {
+                fpos.push_back(f[0]);
+            }
+        }
+        
+        int m = robot.size(), n = fpos.size();
+        // dp[i][j] = min distance for robot[i..] using fpos[j..]
+        // Use 1D DP with rolling
+        vector<long long> dp(n + 1, 0);
+        // Base: dp[n] = infinity for unassigned robots (handled by large value)
+        // Fill from right to left
+        
+        // dp[j] = min cost assigning robots[i..m-1] to factories[j..n-1]
+        // We iterate i from m-1 down to 0
+        
+        const long long INF = 1e18;
+        // Initialize: no robots left = 0 cost regardless of factories
+        // dp[j] for i = m means 0
+        fill(dp.begin(), dp.end(), 0);
+        
+        for (int i = m - 1; i >= 0; i--) {
+            // New dp array
+            vector<long long> ndp(n + 1, INF);
+            // j ranges from i to n - (m - i)
+            for (int j = n - 1; j >= i; j--) {
+                // Option 1: assign robot[i] to factory[j], rest to [j+1..]
+                long long assign = (dp[j + 1] == INF ? INF : dp[j + 1] + abs((long long)robot[i] - fpos[j]));
+                // Option 2: skip factory[j] for robot[i] (use it for later robots or not at all)
+                long long skip = ndp[j + 1];
+                ndp[j] = min(assign, skip);
+            }
+            dp = ndp;
+        }
+        
+        return dp[0];
+    }
+};
