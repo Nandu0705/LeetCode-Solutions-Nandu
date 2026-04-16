@@ -1,0 +1,50 @@
+class Solution {
+public:
+    vector<int> solveQueries(vector<int>& nums, vector<int>& queries) {
+        int n = nums.size();
+        
+        // Map each value to all indices where it appears
+        unordered_map<int, vector<int>> indexMap;
+        for (int i = 0; i < n; i++) {
+            indexMap[nums[i]].push_back(i);
+        }
+        
+        vector<int> answer;
+        
+        for (int q : queries) {
+            int val = nums[q];
+            vector<int>& indices = indexMap[val];
+            
+            // If only one occurrence, no other index exists
+            if (indices.size() == 1) {
+                answer.push_back(-1);
+                continue;
+            }
+            
+            // Binary search for the position of q in sorted indices
+            auto it = lower_bound(indices.begin(), indices.end(), q);
+            int pos = it - indices.begin();
+            int minDist = INT_MAX;
+            
+            // Check neighbors in the indices list (prev and next)
+            // These are the closest candidates in linear sense
+            int m = indices.size();
+            
+            // Next index in list
+            int nextPos = (pos + 1) % m;
+            int nextIdx = indices[nextPos];
+            int d1 = abs(nextIdx - q);
+            minDist = min(minDist, min(d1, n - d1));
+            
+            // Prev index in list
+            int prevPos = (pos - 1 + m) % m;
+            int prevIdx = indices[prevPos];
+            int d2 = abs(prevIdx - q);
+            minDist = min(minDist, min(d2, n - d2));
+            
+            answer.push_back(minDist);
+        }
+        
+        return answer;
+    }
+};
