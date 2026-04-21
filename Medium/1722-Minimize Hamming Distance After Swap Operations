@@ -1,0 +1,49 @@
+class Solution {
+public:
+    // Union-Find helpers
+    vector<int> parent, rank_;
+
+    int find(int x) {
+        if (parent[x] != x)
+            parent[x] = find(parent[x]); // Path compression
+        return parent[x];
+    }
+
+    void unite(int a, int b) {
+        int pa = find(a), pb = find(b);
+        if (pa == pb) return;
+        // Union by rank
+        if (rank_[pa] < rank_[pb]) swap(pa, pb);
+        parent[pb] = pa;
+        if (rank_[pa] == rank_[pb]) rank_[pa]++;
+    }
+
+    int minimumHammingDistance(vector<int>& source, vector<int>& target, vector<vector<int>>& allowedSwaps) {
+        int n = source.size();
+        parent.resize(n);
+        rank_.resize(n, 0);
+        iota(parent.begin(), parent.end(), 0); // parent[i] = i
+
+        // Step 1: Build union-find groups from allowedSwaps
+        for (auto& swap : allowedSwaps)
+            unite(swap[0], swap[1]);
+
+        // Step 2: Group source indices by their root
+        unordered_map<int, unordered_map<int, int>> groups;
+        for (int i = 0; i < n; i++)
+            groups[find(i)][source[i]]++;
+
+        // Step 3: For each index, check if target[i] can be matched
+        int hamming = 0;
+        for (int i = 0; i < n; i++) {
+            int root = find(i);
+            auto& freq = groups[root];
+            if (freq.count(target[i]) && freq[target[i]] > 0)
+                freq[target[i]]--; // Consume this source value
+            else
+                hamming++;         // No match found in the group
+        }
+
+        return hamming;
+    }
+};
