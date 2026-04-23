@@ -1,0 +1,34 @@
+class Solution {
+public:
+    vector<long long> distance(vector<int>& nums) {
+        int n = nums.size();
+        vector<long long> arr(n, 0);
+
+        // Group indices by value
+        unordered_map<int, vector<int>> indices;
+        for (int i = 0; i < n; i++) {
+            indices[nums[i]].push_back(i);
+        }
+
+        // For each group, compute distances using prefix sum
+        for (auto& [val, idx] : indices) {
+            int m = idx.size();
+            long long prefixSum = 0;
+
+            for (int i = 0; i < m; i++) {
+                // Left contribution: i*idx[i] - prefixSum
+                arr[idx[i]] += (long long)i * idx[i] - prefixSum;
+                prefixSum += idx[i];
+            }
+
+            long long suffixSum = 0;
+            for (int i = m - 1; i >= 0; i--) {
+                // Right contribution: suffixSum - (m-1-i)*idx[i]
+                arr[idx[i]] += suffixSum - (long long)(m - 1 - i) * idx[i];
+                suffixSum += idx[i];
+            }
+        }
+
+        return arr;
+    }
+};
