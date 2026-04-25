@@ -1,0 +1,79 @@
+class Solution {
+public:
+    int maxDistance(int side, vector<vector<int>>& points, int k) {
+        int n = points.size();
+        long long P = 4LL * side;
+
+        auto transform = [&](long long x, long long y) -> long long {
+            if (y == 0) return x;
+            if (x == side) return side + y;
+            if (y == side) return 3LL * side - x;
+            return 4LL * side - y;
+        };
+
+        vector<long long> arc(n);
+        for (int i = 0; i < n; i++)
+            arc[i] = transform(points[i][0], points[i][1]);
+
+        sort(arc.begin(), arc.end());
+
+        // Check if we can pick k points with min arc-distance >= d
+        // For a fixed starting index, use binary search to greedily jump
+        auto tryStart = [&](int start, long long d) -> bool {
+            int count = 1;
+            long long prev = arc[start];
+            long long base = 0; // offset when we wrap around
+
+            int idx = start;
+            for (int picked = 1; picked < k; picked++) {
+                long long target = prev + d;
+                // Search in arc[idx+1 .. n-1] (with base offset) then arc[0..start-1] (with base+P)
+                // We work on a "doubled" virtual array: arc[i] or arc[i]+P
+                // Find first arc value >= target - base, searching circularly
+
+                // Search from idx+1 to n-1
+                long long searchTarget = target - base;
+                auto it = lower_bound(arc.begin() + idx + 1, arc.end(), searchTarget);
+
+                if (it != arc.end()) {
+                    idx = it - arc.begin();
+                    prev = arc[idx] + base;
+                } else {
+                    // Wrap around: now use arc[i] + P as values
+                    base += P;
+                    searchTarget = target - base + P; 
+                    // After wrap, arc values are arc[0..start-1] + P
+                    // Search in arc[0..start-1]
+                    searchTarget = target - base;
+                    it = lower_bound(arc.begin(), arc.begin() + start, searchTarget);
+                    if (it == arc.begin() + start) return false; // not enough points
+                    idx = it - arc.begin();
+                    prev = arc[idx] + base;
+                }
+            }
+
+            // Check wrap-around: distance from last point back to start point
+            long long wrap_dist = arc[start] + P - prev;
+            return wrap_dist >= d;
+        };
+
+        auto check = [&](long long d) -> bool {
+            for (int start = 0; start < n; start++) {
+                if (tryStart(start, d)) return true;
+            }
+            return false;
+        };
+
+        long long lo = 1, hi = P / k, ans = 0;
+        while (lo <= hi) {
+            long long mid = lo + (hi - lo) / 2;
+            if (check(mid)) {
+                ans = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        return (int)ans;
+    }
+};
