@@ -1,0 +1,41 @@
+class Solution {
+public:
+    bool containsCycle(vector<vector<char>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
+        
+        // DFS: returns true if cycle found
+        // pr, pc = parent row/col (where we came from)
+        function<bool(int, int, int, int)> dfs = [&](int r, int c, int pr, int pc) -> bool {
+            visited[r][c] = true;
+            
+            int dirs[4][2] = {{0,1},{0,-1},{1,0},{-1,0}};
+            for (auto& d : dirs) {
+                int nr = r + d[0], nc = c + d[1];
+                
+                // Out of bounds or different character → skip
+                if (nr < 0 || nr >= m || nc < 0 || nc >= n) continue;
+                if (grid[nr][nc] != grid[r][c]) continue;
+                
+                // Skip the cell we just came from (no backtracking)
+                if (nr == pr && nc == pc) continue;
+                
+                // If already visited → cycle detected!
+                if (visited[nr][nc]) return true;
+                
+                if (dfs(nr, nc, r, c)) return true;
+            }
+            return false;
+        };
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (!visited[i][j]) {
+                    // Start DFS; -1,-1 means no parent
+                    if (dfs(i, j, -1, -1)) return true;
+                }
+            }
+        }
+        return false;
+    }
+};
