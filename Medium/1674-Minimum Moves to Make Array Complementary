@@ -1,0 +1,33 @@
+class Solution {
+public:
+    int minMoves(vector<int>& nums, int limit) {
+        int n = nums.size();
+        // diff array for range [2, 2*limit], size 2*limit+2
+        vector<int> diff(2 * limit + 2, 0);
+
+        for (int i = 0; i < n / 2; i++) {
+            int a = nums[i], b = nums[n - 1 - i];
+            int lo = min(a, b), hi = max(a, b);
+
+            // Default: 2 moves for entire range [2, 2*limit]
+            diff[2] += 2;
+            diff[2 * limit + 1] -= 2;
+
+            // 1 move for [lo+1, hi+limit]
+            diff[lo + 1] -= 1;
+            diff[hi + limit + 1] += 1;
+
+            // 0 moves for [a+b, a+b]
+            diff[a + b] -= 1;
+            diff[a + b + 1] += 1;
+        }
+
+        int moves = INT_MAX, curr = 0;
+        for (int t = 2; t <= 2 * limit; t++) {
+            curr += diff[t];
+            moves = min(moves, curr);
+        }
+
+        return moves;
+    }
+};
