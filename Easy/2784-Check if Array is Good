@@ -1,0 +1,25 @@
+class Solution {
+public:
+    bool isGood(vector<int>& nums) {
+        int n = nums.size() - 1; // This should be the 'n' in base[n]
+        sort(nums.begin(), nums.end());
+
+        // Rule 1: The array must have at least 2 elements ([1,1] is the smallest)
+        // Rule 2: The largest element must be equal to size - 1
+        if (nums.size() < 2 || nums.back() != n) {
+            return false;
+        }
+
+        // Rule 3: All elements except the last one must be 1, 2, 3... n
+        for (int i = 0; i < n; i++) {
+            if (nums[i] != i + 1) {
+                return false; // Found a gap or wrong number
+            }
+        }
+
+        // Rule 4: The last element must be a duplicate of the second-to-last
+        // (We already know nums[n-1] is 'n' from the loop above, 
+        // and we checked nums[n] == n in Rule 2)
+        return nums[n] == nums[n - 1];
+    }
+};
