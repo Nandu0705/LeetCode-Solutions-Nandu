@@ -1,0 +1,60 @@
+#include <vector>
+#include <unordered_map>
+#include <queue>
+
+using namespace std;
+
+class Solution {
+public:
+    int minJumps(vector<int>& arr) {
+        int n = arr.size();
+        if (n <= 1) return 0;
+
+        // Step 1: Map each value to all its indices
+        unordered_map<int, vector<int>> indicesOfValue;
+        for (int i = 0; i < n; i++) {
+            indicesOfValue[arr[i]].push_back(i);
+        }
+
+        // Step 2: BFS setup
+        vector<bool> visited(n, false);
+        queue<pair<int, int>> q; // {current_index, current_steps}
+
+        q.push({0, 0});
+        visited[0] = true;
+
+        while (!q.empty()) {
+            auto [curr, steps] = q.front();
+            q.pop();
+
+            // If we reached the last index
+            if (curr == n - 1) return steps;
+
+            // Option 1: Jump to same values
+            if (indicesOfValue.count(arr[curr])) {
+                for (int nextIndex : indicesOfValue[arr[curr]]) {
+                    if (nextIndex != curr && !visited[nextIndex]) {
+                        visited[nextIndex] = true;
+                        q.push({nextIndex, steps + 1});
+                    }
+                }
+                // IMPORTANT: Clear the map entry so we don't iterate these indices again
+                indicesOfValue.erase(arr[curr]);
+            }
+
+            // Option 2: Jump to i + 1
+            if (curr + 1 < n && !visited[curr + 1]) {
+                visited[curr + 1] = true;
+                q.push({curr + 1, steps + 1});
+            }
+
+            // Option 3: Jump to i - 1
+            if (curr - 1 >= 0 && !visited[curr - 1]) {
+                visited[curr - 1] = true;
+                q.push({curr - 1, steps + 1});
+            }
+        }
+
+        return 0;
+    }
+};
