@@ -1,0 +1,24 @@
+class Solution {
+public:
+    vector<int> findThePrefixCommonArray(vector<int>& A, vector<int>& B) {
+        int n = A.size();
+        vector<int> C(n);
+        unordered_set<int> seen_A, seen_B;
+        int common = 0;
+
+        for (int i = 0; i < n; i++) {
+            // If A[i] was already seen in B, it's now common
+            if (seen_B.count(A[i])) common++;
+            seen_A.insert(A[i]);
+
+            // If B[i] was already seen in A, it's now common
+            if (seen_A.count(B[i])) common++;
+            seen_B.insert(B[i]);
+
+            // Handle case where A[i] == B[i] (counted once above via seen_A check)
+            C[i] = common;
+        }
+
+        return C;
+    }
+};
