@@ -1,0 +1,22 @@
+class Solution {
+public:
+    bool check(vector<int>& nums) {
+        int n = nums.size();
+        int countDrops = 0;
+        
+        for (int i = 0; i < n; i++) {
+            // Compare current element with the next element. 
+            // Using (i + 1) % n seamlessly checks the last element against the first one!
+            if (nums[i] > nums[(i + 1) % n]) {
+                countDrops++;
+            }
+            
+            // If we find more than 1 drop, it's impossible
+            if (countDrops > 1) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+};
